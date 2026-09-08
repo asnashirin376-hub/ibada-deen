@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Ibadah Daily - Islamic Companion</title>
+  <meta name="description" content="A clean, modern, and aesthetically pleasing Islamic companion application for daily prayers, Quran recitation, Adhkar, Qibla finder, and nearby Masjids." />
+  <meta name="theme-color" content="#064e3b" />
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            emerald: {
+              50: '#ecfdf5',
+              100: '#d1fae5',
+              200: '#a7f3d0',
+              300: '#6ee7b7',
+              400: '#34d399',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857',
+              800: '#065f46',
+              900: '#064e3b',
+              950: '#022c22'
+            },
+            amber: {
+              300: '#fcd34d',
+              400: '#fbbf24',
+              500: '#f59e0b',
+              600: '#d97706',
+              700: '#b45309'
+            }
+          },
+          fontFamily: {
+            sans: ['Plus Jakarta Sans', 'sans-serif'],
+            arabic: ['Amiri', 'Scheherazade New', 'serif']
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Leaflet Map CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="css/styles.css" />
+
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Leaflet Map JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+</head>
+<body class="bg-islamic-pattern min-h-screen text-slate-800 dark:text-slate-100 flex flex-col antialiased selection:bg-emerald-600 selection:text-white transition-colors duration-200">
+
+  <!-- Top App Bar / Header -->
+  <header class="sticky top-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800 transition-colors">
+    <div class="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
+      <!-- App Logo & Branding -->
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-2xl bg-gradient-to-tr from-emerald-800 to-emerald-600 text-amber-300 flex items-center justify-center shadow-md shadow-emerald-900/20 border border-emerald-500/30">
+          <i data-lucide="moon" class="w-5 h-5 fill-amber-300"></i>
+        </div>
+        <div>
+          <span class="font-extrabold text-base md:text-lg tracking-tight text-emerald-950 dark:text-emerald-100 font-display">
+            Ibadah <span class="text-amber-500">Daily</span>
+          </span>
+          <span class="block text-[10px] text-emerald-700 dark:text-emerald-400 font-bold -mt-1 tracking-wider uppercase">Islamic Companion</span>
+        </div>
+      </div>
+
+      <!-- Right Actions: Notifications & Theme Toggle -->
+      <div class="flex items-center gap-2">
+        <button
+          id="notification-modal-btn"
+          title="Daily Prayer & Dhikr Reminders"
+          class="p-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition border border-slate-200/60 dark:border-slate-700 shadow-sm active-bounce relative"
+        >
+          <i data-lucide="bell" class="w-4 h-4"></i>
+          <span id="header-notif-dot" class="absolute top-2 right-2 w-2 h-2 bg-emerald-500 rounded-full hidden"></span>
+        </button>
+        <button
+          id="theme-toggle-btn"
+          title="Toggle Light / Dark Mode"
+          class="p-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition border border-slate-200/60 dark:border-slate-700 shadow-sm active-bounce"
+        >
+          <i data-lucide="moon" class="w-4 h-4"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Body -->
+  <main class="flex-1 max-w-5xl w-full mx-auto px-4 pt-5 pb-32 md:pb-24">
+    <!-- Tab 1: Home Dashboard -->
+    <section id="tab-home" class="tab-view-container">
+      <!-- Injected by HomeTab -->
+    </section>
+
+    <!-- Tab 2: Quran -->
+    <section id="tab-quran" class="tab-view-container hidden">
+      <!-- Injected by QuranTab -->
+    </section>
+
+    <!-- Tab 3: Tasbeeh & Adhkar -->
+    <section id="tab-tasbeeh" class="tab-view-container hidden">
+      <!-- Injected by TasbeehTab -->
+    </section>
+
+    <!-- Tab 4: Qibla Finder -->
+    <section id="tab-qibla" class="tab-view-container hidden">
+      <!-- Injected by QiblaTab -->
+    </section>
+
+    <!-- Tab 5: Masjid Locator -->
+    <section id="tab-masjid" class="tab-view-container hidden">
+      <!-- Injected by MasjidTab -->
+    </section>
+  </main>
+
+  <!-- Global Floating Audio Player Bar (for Quran recitations) -->
+  <div
+    id="global-audio-bar"
+    class="fixed bottom-20 md:bottom-6 left-4 right-4 max-w-xl mx-auto z-40 bg-slate-900/95 text-white backdrop-blur-xl rounded-2xl p-3.5 shadow-2xl border border-emerald-500/30 transition-transform duration-300 transform translate-y-32 flex flex-col gap-2"
+  >
+    <div class="flex items-center justify-between gap-3">
+      <div class="flex items-center gap-3 truncate">
+        <div class="w-8 h-8 rounded-xl bg-emerald-700 flex items-center justify-center text-amber-300 shrink-0">
+          <i data-lucide="volume-2" class="w-4 h-4"></i>
+        </div>
+        <div class="truncate">
+          <h4 id="audio-bar-title" class="text-xs font-bold text-slate-100 truncate">Surah Recitation</h4>
+          <p id="audio-bar-subtitle" class="text-[11px] text-emerald-400 truncate">Mishary Alafasy</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-1 shrink-0">
+        <button id="audio-bar-play-toggle" class="p-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white transition">
+          <i data-lucide="pause" class="w-4 h-4 fill-current"></i>
+        </button>
+        <button id="audio-bar-close" class="p-2 text-slate-400 hover:text-white transition">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Progress Bar -->
+    <input id="audio-bar-progress" type="range" min="0" max="100" value="0" class="w-full h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-emerald-500" />
+  </div>
+
+  <!-- Bottom Navigation Bar -->
+  <nav class="fixed bottom-0 left-0 right-0 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-lg border-t border-slate-200/80 dark:border-slate-800 shadow-lg transition-colors">
+    <div class="max-w-md mx-auto px-3 h-16 flex items-center justify-around">
+      <!-- 1. Home -->
+      <button data-tab="home" class="nav-tab-btn flex flex-col items-center justify-center flex-1 py-1 text-emerald-700 dark:text-emerald-400 group relative">
+        <div class="nav-indicator absolute top-0 w-8 h-1 bg-emerald-600 rounded-full transition-opacity opacity-100"></div>
+        <i data-lucide="home" class="nav-icon w-5 h-5 group-hover:scale-110 transition-transform"></i>
+        <span class="nav-label text-[10px] mt-1 font-bold">Home</span>
+      </button>
+
+      <!-- 2. Quran -->
+      <button data-tab="quran" class="nav-tab-btn flex flex-col items-center justify-center flex-1 py-1 text-slate-400 dark:text-slate-500 group relative">
+        <div class="nav-indicator absolute top-0 w-8 h-1 bg-emerald-600 rounded-full transition-opacity opacity-0"></div>
+        <i data-lucide="book-open" class="nav-icon w-5 h-5 group-hover:scale-110 transition-transform"></i>
+        <span class="nav-label text-[10px] mt-1 font-medium">Quran</span>
+      </button>
+
+      <!-- 3. Activities & Tasbeeh Tracker [MAIN FEATURE] -->
+      <button data-tab="tasbeeh" class="nav-tab-btn flex flex-col items-center justify-center flex-1 py-1 text-slate-400 dark:text-slate-500 group relative">
+        <div class="nav-indicator absolute top-0 w-8 h-1 bg-emerald-600 rounded-full transition-opacity opacity-0"></div>
+        <i data-lucide="activity" class="nav-icon w-5 h-5 group-hover:scale-110 transition-transform"></i>
+        <span class="nav-label text-[10px] mt-1 font-medium">Activities</span>
+      </button>
+
+      <!-- 4. Qibla Finder -->
+      <button data-tab="qibla" class="nav-tab-btn flex flex-col items-center justify-center flex-1 py-1 text-slate-400 dark:text-slate-500 group relative">
+        <div class="nav-indicator absolute top-0 w-8 h-1 bg-emerald-600 rounded-full transition-opacity opacity-0"></div>
+        <i data-lucide="compass" class="nav-icon w-5 h-5 group-hover:scale-110 transition-transform"></i>
+        <span class="nav-label text-[10px] mt-1 font-medium">Qibla</span>
+      </button>
+
+      <!-- 5. Masjid Locator -->
+      <button data-tab="masjid" class="nav-tab-btn flex flex-col items-center justify-center flex-1 py-1 text-slate-400 dark:text-slate-500 group relative">
+        <div class="nav-indicator absolute top-0 w-8 h-1 bg-emerald-600 rounded-full transition-opacity opacity-0"></div>
+        <i data-lucide="map-pin" class="nav-icon w-5 h-5 group-hover:scale-110 transition-transform"></i>
+        <span class="nav-label text-[10px] mt-1 font-medium">Masjids</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Modal: Location Selector -->
+  <div id="modal-location-selector" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="font-bold text-slate-800 dark:text-slate-100 text-base flex items-center gap-2">
+          <i data-lucide="map-pin" class="w-5 h-5 text-emerald-600"></i>
+          Select Location
+        </h3>
+        <button id="btn-close-loc-modal" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <button id="btn-loc-detect-gps" class="w-full flex items-center justify-center gap-2 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold transition shadow-sm">
+        <i data-lucide="crosshair" class="w-4 h-4"></i>
+        <span>Use Current GPS Location</span>
+      </button>
+
+      <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Or Choose City</div>
+
+      <div id="modal-popular-cities-list" class="space-y-1.5 max-h-60 overflow-y-auto pr-1">
+        <!-- Injected dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Custom Daily Notifications & Reminders -->
+  <div id="modal-notification-settings" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-5 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between">
+        <h3 class="font-bold text-slate-800 dark:text-slate-100 text-base flex items-center gap-2">
+          <i data-lucide="bell-ring" class="w-5 h-5 text-emerald-600"></i>
+          Daily Reminders & Notifications
+        </h3>
+        <button id="btn-close-notif-modal" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Master Toggle & Permission Status -->
+      <div class="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 flex items-center justify-between">
+        <div>
+          <span class="font-bold text-xs text-emerald-900 dark:text-emerald-200 block">Enable Daily Notifications</span>
+          <span id="notif-permission-status" class="text-[11px] text-emerald-700 dark:text-emerald-400">Browser alerts for prayers & dhikr</span>
+        </div>
+        <label class="relative inline-flex items-center cursor-pointer">
+          <input type="checkbox" id="toggle-master-notifications" class="sr-only peer" />
+          <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+        </label>
+      </div>
+
+      <!-- Prayer Reminders Checklist -->
+      <div class="space-y-2">
+        <span class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider block">Prayer Time Reminders</span>
+        <div class="grid grid-cols-2 gap-2">
+          ${["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"].map(p => `
+            <label class="flex items-center gap-2 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 cursor-pointer">
+              <input type="checkbox" id="notif-${p.toLowerCase()}" class="accent-emerald-600 w-4 h-4 rounded" checked />
+              <span class="text-xs font-bold text-slate-800 dark:text-slate-200">${p}</span>
+            </label>
+          `).join("")}
+        </div>
+      </div>
+
+      <!-- Daily Dhikr Session Reminders -->
+      <div class="space-y-3 pt-1 border-t border-slate-100 dark:border-slate-800">
+        <span class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider block">Daily Dhikr Reminders</span>
+
+        <!-- Morning Dhikr Time -->
+        <div class="flex items-center justify-between gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60">
+          <div class="flex items-center gap-2">
+            <input type="checkbox" id="notif-morning-dhikr" class="accent-emerald-600 w-4 h-4 rounded" checked />
+            <div>
+              <span class="text-xs font-bold text-slate-800 dark:text-slate-200 block">Morning Adhkar</span>
+              <span class="text-[10px] text-slate-400">Daily morning reminder</span>
+            </div>
+          </div>
+          <input type="time" id="notif-morning-time" value="06:30" class="px-2 py-1 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg text-xs font-mono font-bold text-slate-800 dark:text-slate-100" />
+        </div>
+
+        <!-- Evening Dhikr Time -->
+        <div class="flex items-center justify-between gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60">
+          <div class="flex items-center gap-2">
+            <input type="checkbox" id="notif-evening-dhikr" class="accent-emerald-600 w-4 h-4 rounded" checked />
+            <div>
+              <span class="text-xs font-bold text-slate-800 dark:text-slate-200 block">Evening Adhkar</span>
+              <span class="text-[10px] text-slate-400">Daily evening reminder</span>
+            </div>
+          </div>
+          <input type="time" id="notif-evening-time" value="17:30" class="px-2 py-1 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg text-xs font-mono font-bold text-slate-800 dark:text-slate-100" />
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="pt-2 flex items-center justify-between gap-2">
+        <button id="btn-test-notification" type="button" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold transition flex items-center gap-1.5">
+          <i data-lucide="bell" class="w-3.5 h-3.5"></i>
+          <span>Test Alert</span>
+        </button>
+        <button id="btn-save-notifications" type="button" class="px-5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold transition shadow-sm">
+          Save Settings
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div
+    id="app-toast"
+    class="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 bg-slate-900/90 text-white text-xs font-bold px-4 py-2.5 rounded-2xl shadow-xl border border-slate-700 backdrop-blur-md transition-all duration-300 translate-y-20 opacity-0 pointer-events-none flex items-center gap-2"
+  >
+    <i data-lucide="check-circle" class="w-4 h-4 text-emerald-400"></i>
+    <span id="toast-message">Action confirmed</span>
+  </div>
+
+  <!-- Application Entry Point -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
