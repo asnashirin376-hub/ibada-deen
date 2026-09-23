@@ -146,7 +146,7 @@ export async function fetchPrayerTimes(lat, lng, date = new Date(), method = 2) 
 
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 4000);
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 s — prevents ERR_ABORTED on slow connections
 
     const response = await fetch(url, { signal: controller.signal });
     clearTimeout(timeoutId);
