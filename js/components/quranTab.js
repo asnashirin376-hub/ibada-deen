@@ -184,7 +184,7 @@ export class QuranTab {
         if (window.lucide) window.lucide.createIcons();
       }
 
-      Storage.saveLastRead({ surahNumber, surahName: surah.englishName });
+      Storage.setLastRead(surahNumber, surah.englishName, 1);
       this.updateLastReadCard();
 
     } catch (error) {
