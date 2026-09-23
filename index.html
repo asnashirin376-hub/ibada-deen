@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Ibadah Daily - Islamic Companion</title>
+  <title>Ibadah Daily </title>
   <meta name="description" content="A clean, modern, and aesthetically pleasing Islamic companion application for daily prayers, Quran recitation, Adhkar, Qibla finder, and nearby Masjids." />
   <meta name="theme-color" content="#064e3b" />
 
@@ -121,6 +121,7 @@
     <!-- Tab 5: Masjid Locator -->
     <section id="tab-masjid" class="tab-view-container hidden">
       <!-- Injected by MasjidTab -->
+      <div id="masjid-map" style="height: 400px;" class="rounded-2xl shadow-md border dark:border-slate-800"></div>
     </section>
   </main>
 
@@ -171,21 +172,21 @@
         <span class="nav-label text-[10px] mt-1 font-medium">Quran</span>
       </button>
 
-      <!-- 3. Activities & Tasbeeh Tracker [MAIN FEATURE] -->
+      <!-- 3. Activities & Tasbeeh Tracker -->
       <button data-tab="tasbeeh" class="nav-tab-btn flex flex-col items-center justify-center flex-1 py-1 text-slate-400 dark:text-slate-500 group relative">
         <div class="nav-indicator absolute top-0 w-8 h-1 bg-emerald-600 rounded-full transition-opacity opacity-0"></div>
-        <i data-lucide="activity" class="nav-icon w-5 h-5 group-hover:scale-110 transition-transform"></i>
+        <i data-lucide="check-square" class="nav-icon w-5 h-5 group-hover:scale-110 transition-transform"></i>
         <span class="nav-label text-[10px] mt-1 font-medium">Activities</span>
       </button>
 
-      <!-- 4. Qibla Finder -->
+      <!-- 4. Qibla -->
       <button data-tab="qibla" class="nav-tab-btn flex flex-col items-center justify-center flex-1 py-1 text-slate-400 dark:text-slate-500 group relative">
         <div class="nav-indicator absolute top-0 w-8 h-1 bg-emerald-600 rounded-full transition-opacity opacity-0"></div>
         <i data-lucide="compass" class="nav-icon w-5 h-5 group-hover:scale-110 transition-transform"></i>
         <span class="nav-label text-[10px] mt-1 font-medium">Qibla</span>
       </button>
 
-      <!-- 5. Masjid Locator -->
+      <!-- 5. Masjids -->
       <button data-tab="masjid" class="nav-tab-btn flex flex-col items-center justify-center flex-1 py-1 text-slate-400 dark:text-slate-500 group relative">
         <div class="nav-indicator absolute top-0 w-8 h-1 bg-emerald-600 rounded-full transition-opacity opacity-0"></div>
         <i data-lucide="map-pin" class="nav-icon w-5 h-5 group-hover:scale-110 transition-transform"></i>
@@ -193,121 +194,6 @@
       </button>
     </div>
   </nav>
-
-  <!-- Modal: Location Selector -->
-  <div id="modal-location-selector" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
-    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4">
-      <div class="flex items-center justify-between">
-        <h3 class="font-bold text-slate-800 dark:text-slate-100 text-base flex items-center gap-2">
-          <i data-lucide="map-pin" class="w-5 h-5 text-emerald-600"></i>
-          Select Location
-        </h3>
-        <button id="btn-close-loc-modal" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1">
-          <i data-lucide="x" class="w-5 h-5"></i>
-        </button>
-      </div>
-
-      <button id="btn-loc-detect-gps" class="w-full flex items-center justify-center gap-2 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold transition shadow-sm">
-        <i data-lucide="crosshair" class="w-4 h-4"></i>
-        <span>Use Current GPS Location</span>
-      </button>
-
-      <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Or Choose City</div>
-
-      <div id="modal-popular-cities-list" class="space-y-1.5 max-h-60 overflow-y-auto pr-1">
-        <!-- Injected dynamically -->
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal: Custom Daily Notifications & Reminders -->
-  <div id="modal-notification-settings" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
-    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-5 max-h-[90vh] overflow-y-auto">
-      <div class="flex items-center justify-between">
-        <h3 class="font-bold text-slate-800 dark:text-slate-100 text-base flex items-center gap-2">
-          <i data-lucide="bell-ring" class="w-5 h-5 text-emerald-600"></i>
-          Daily Reminders & Notifications
-        </h3>
-        <button id="btn-close-notif-modal" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1">
-          <i data-lucide="x" class="w-5 h-5"></i>
-        </button>
-      </div>
-
-      <!-- Master Toggle & Permission Status -->
-      <div class="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 flex items-center justify-between">
-        <div>
-          <span class="font-bold text-xs text-emerald-900 dark:text-emerald-200 block">Enable Daily Notifications</span>
-          <span id="notif-permission-status" class="text-[11px] text-emerald-700 dark:text-emerald-400">Browser alerts for prayers & dhikr</span>
-        </div>
-        <label class="relative inline-flex items-center cursor-pointer">
-          <input type="checkbox" id="toggle-master-notifications" class="sr-only peer" />
-          <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
-        </label>
-      </div>
-
-      <!-- Prayer Reminders Checklist -->
-      <div class="space-y-2">
-        <span class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider block">Prayer Time Reminders</span>
-        <div class="grid grid-cols-2 gap-2">
-          ${["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"].map(p => `
-            <label class="flex items-center gap-2 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 cursor-pointer">
-              <input type="checkbox" id="notif-${p.toLowerCase()}" class="accent-emerald-600 w-4 h-4 rounded" checked />
-              <span class="text-xs font-bold text-slate-800 dark:text-slate-200">${p}</span>
-            </label>
-          `).join("")}
-        </div>
-      </div>
-
-      <!-- Daily Dhikr Session Reminders -->
-      <div class="space-y-3 pt-1 border-t border-slate-100 dark:border-slate-800">
-        <span class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider block">Daily Dhikr Reminders</span>
-
-        <!-- Morning Dhikr Time -->
-        <div class="flex items-center justify-between gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60">
-          <div class="flex items-center gap-2">
-            <input type="checkbox" id="notif-morning-dhikr" class="accent-emerald-600 w-4 h-4 rounded" checked />
-            <div>
-              <span class="text-xs font-bold text-slate-800 dark:text-slate-200 block">Morning Adhkar</span>
-              <span class="text-[10px] text-slate-400">Daily morning reminder</span>
-            </div>
-          </div>
-          <input type="time" id="notif-morning-time" value="06:30" class="px-2 py-1 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg text-xs font-mono font-bold text-slate-800 dark:text-slate-100" />
-        </div>
-
-        <!-- Evening Dhikr Time -->
-        <div class="flex items-center justify-between gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60">
-          <div class="flex items-center gap-2">
-            <input type="checkbox" id="notif-evening-dhikr" class="accent-emerald-600 w-4 h-4 rounded" checked />
-            <div>
-              <span class="text-xs font-bold text-slate-800 dark:text-slate-200 block">Evening Adhkar</span>
-              <span class="text-[10px] text-slate-400">Daily evening reminder</span>
-            </div>
-          </div>
-          <input type="time" id="notif-evening-time" value="17:30" class="px-2 py-1 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg text-xs font-mono font-bold text-slate-800 dark:text-slate-100" />
-        </div>
-      </div>
-
-      <!-- Action Buttons -->
-      <div class="pt-2 flex items-center justify-between gap-2">
-        <button id="btn-test-notification" type="button" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold transition flex items-center gap-1.5">
-          <i data-lucide="bell" class="w-3.5 h-3.5"></i>
-          <span>Test Alert</span>
-        </button>
-        <button id="btn-save-notifications" type="button" class="px-5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold transition shadow-sm">
-          Save Settings
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Toast Notification -->
-  <div
-    id="app-toast"
-    class="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 bg-slate-900/90 text-white text-xs font-bold px-4 py-2.5 rounded-2xl shadow-xl border border-slate-700 backdrop-blur-md transition-all duration-300 translate-y-20 opacity-0 pointer-events-none flex items-center gap-2"
-  >
-    <i data-lucide="check-circle" class="w-4 h-4 text-emerald-400"></i>
-    <span id="toast-message">Action confirmed</span>
-  </div>
 
   <!-- Application Entry Point -->
   <script type="module" src="js/app.js"></script>

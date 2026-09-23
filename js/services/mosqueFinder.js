@@ -1,107 +1,72 @@
-// Mosque Locator Service using Leaflet & Overpass API (OpenStreetMap)
-// Allows interactive map rendering, finding nearby masjids, and direct navigation links
+// Mosque Finder Service
+// Uses Overpass API (OpenStreetMap) to fetch real-world mosque data around the user's location
 
-export function calculateDistanceKm(lat1, lon1, lat2, lon2) {
-  const R = 6371; // Earth radius km
-  const dLat = ((lat2 - lat1) * Math.PI) / 180;
-  const dLon = ((lon2 - lon1) * Math.PI) / 180;
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return Math.round(R * c * 10) / 10;
-}
-
-// Generate Google Maps Directions URL
-export function getDirectionsUrl(lat, lng, name = "Mosque") {
-  return `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&destination_place_id=${encodeURIComponent(name)}`;
-}
-
-// Curated realistic sample masjids based around user coordinates if Overpass is unreachable
-export function generateCuratedMasjids(userLat, userLng) {
-  // Offsets in approx 0.5 - 3.5 km radius
-  const sampleOffsets = [
-    { dLat: 0.005, dLng: 0.006, name: "Masjid Al-Noor (Grand Mosque)", address: "Central Avenue, Near Islamic Cultural Centre" },
-    { dLat: -0.008, dLng: 0.004, name: "Masjid Al-Taqwa", address: "Greenwood Blvd, Community Center" },
-    { dLat: 0.012, dLng: -0.009, name: "Masjid Al-Rahman", address: "Station Road, Al-Madinah Square" },
-    { dLat: -0.014, dLng: -0.011, name: "Masjid Bilal Ibn Rabah", address: "Peace Garden Street" },
-    { dLat: 0.018, dLng: 0.015, name: "Masjid Al-Falah", address: "North Park Avenue" }
-  ];
-
-  return sampleOffsets.map((s, idx) => {
-    const lat = userLat + s.dLat;
-    const lng = userLng + s.dLng;
-    const distance = calculateDistanceKm(userLat, userLng, lat, lng);
-    return {
-      id: `curated_${idx}`,
-      name: s.name,
-      lat,
-      lng,
-      distance,
-      address: s.address,
-      isVerified: true
-    };
-  }).sort((a, b) => a.distance - b.distance);
-}
-
-// Fetch Masjids using OpenStreetMap Overpass API
-export async function searchNearbyMasjids(userLat, userLng, radiusKm = 5) {
-  const radiusMeters = radiusKm * 1000;
-  // Overpass QL query looking for places of worship tagged as muslim / mosque
-  const query = `
-    [out:json][timeout:10];
-    (
-      node["amenity"="place_of_worship"]["religion"="muslim"](around:${radiusMeters},${userLat},${userLng});
-      way["amenity"="place_of_worship"]["religion"="muslim"](around:${radiusMeters},${userLat},${userLng});
-      relation["amenity"="place_of_worship"]["religion"="muslim"](around:${radiusMeters},${userLat},${userLng});
-    );
-    out center 15;
-  `;
-
-  const overpassUrl = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
+/**
+ * യൂസറുടെ അക്ഷാംശവും രേഖാംശവും (Lat/Lng) അടിസ്ഥാനമാക്കി നിശ്ചിത റേഡിയസിനുള്ളിലെ പള്ളികൾ തിരയുന്നു
+ */
+export async function searchNearbyMasjids(lat, lng, radiusKm = 5) {
+  // Overpass API വഴി പള്ളികളുടെ (amenity=place_of_worship & religion=muslim) വിവരങ്ങൾ എടുക്കാനുള്ള ക്വറി
+  const overpassUrl = `https://overpass-api.de[out:json][timeout:25];node["amenity"="place_of_worship"]["religion"="muslim"](around:${radiusKm * 1000},${lat},${lng});out body;`;
 
   try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 7000);
-
-    const response = await fetch(overpassUrl, { signal: controller.signal });
-    clearTimeout(timeoutId);
-
-    if (response.ok) {
-      const data = await response.json();
-      if (data.elements && data.elements.length > 0) {
-        const masjids = data.elements.map(el => {
-          const mLat = el.lat || (el.center && el.center.lat);
-          const mLng = el.lon || (el.center && el.center.lon);
-          const name = (el.tags && (el.tags.name || el.tags["name:en"] || el.tags["name:ar"])) || "Masjid / Mosque";
-          const street = (el.tags && (el.tags["addr:street"] || el.tags["addr:suburb"] || el.tags["addr:city"])) || "Nearby Area";
-
-          const distance = mLat && mLng ? calculateDistanceKm(userLat, userLng, mLat, mLng) : 1.0;
-
-          return {
-            id: el.id.toString(),
-            name,
-            lat: mLat,
-            lng: mLng,
-            distance,
-            address: street,
-            isVerified: true
-          };
-        }).filter(m => m.lat && m.lng);
-
-        if (masjids.length > 0) {
-          masjids.sort((a, b) => a.distance - b.distance);
-          return masjids;
-        }
-      }
+    const response = await fetch(overpassUrl);
+    if (!response.ok) throw new Error("Network response was not ok");
+    
+    const data = await response.json();
+    
+    if (!data.elements || data.elements.length === 0) {
+      return []; // പള്ളികളൊന്നും കണ്ടെത്തിയില്ലെങ്കിൽ കാലിയായ ലിസ്റ്റ് നൽകും
     }
-  } catch (err) {
-    console.warn("Overpass API unavailable or timed out, loading curated nearby mosques:", err);
-  }
 
-  // Graceful fallback to curated data
-  return generateCuratedMasjids(userLat, userLng);
+    // കിട്ടിയ പള്ളികളുടെ വിവരങ്ങൾ ഭംഗിയായി ക്രമീകരിക്കുന്നു
+    const masjids = data.elements.map(element => {
+      const name = element.tags.name || "Masjid / Mosque";
+      const distance = calculateDistance(lat, lng, element.lat, element.lon);
+      
+      return {
+        id: element.id,
+        name: name,
+        lat: element.lat,
+        lng: element.lon,
+        distanceKm: distance.toFixed(2) // രണ്ട് ദശാംശ സംഖ്യയിലേക്ക് മാറ്റുന്നു (ഉദാ: 1.25 km)
+      };
+    });
+
+    // ഏറ്റവും അടുത്തുള്ള പള്ളികൾ ആദ്യം വരാൻ വേണ്ടി ദൂരത്തിന്റെ അടിസ്ഥാനത്തിൽ സോർട്ട് (Sort) ചെയ്യുന്നു
+    return masjids.sort((a, b) => a.distanceKm - b.distanceKm);
+
+  } catch (error) {
+    console.error("Overpass API വഴി പള്ളികൾ കണ്ടെത്താൻ കഴിഞ്ഞില്ല:", error);
+    // ഒരുപക്ഷേ ഇന്റർനെറ്റ് ഇല്ലെങ്കിലോ API ഡൗൺ ആയാലോ ആപ്പ് ക്രാഷ് ആകാതിരിക്കാൻ ചില താൽക്കാലിക സാമ്പിൾ ഡാറ്റ കാണിക്കുന്നു
+    return [
+      { id: "mock_1", name: "Central Juma Masjid", lat: lat + 0.005, lng: lng + 0.005, distanceKm: "0.75" },
+      { id: "mock_2", name: "Town Mosque", lat: lat - 0.008, lng: lng + 0.003, distanceKm: "1.20" }
+    ];
+  }
+}
+
+/**
+ * ഗൂഗിൾ മാപ്പിലേക്ക് നാവിഗേറ്റ് ചെയ്യാനുള്ള ലിങ്ക് തയാറാക്കുന്നു
+ */
+export function getDirectionsUrl(userLat, userLng, destinationLat, destinationLng) {
+  return `https://google.com{userLat},${userLng}&destination=${destinationLat},${destinationLng}&travelmode=driving`;
+}
+
+/**
+ * രണ്ട് ഭൂമിശാസ്ത്ര ലൊക്കേഷനുകൾ തമ്മിലുള്ള ദൂരം കണക്കാക്കാനുള്ള Haversine ഫോർമുല
+ */
+function calculateDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371; // ഭൂമിയുടെ റേഡിയസ് (കിമീ)
+  const dLat = deg2rad(lat2 - lat1);
+  const dLon = deg2rad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+function deg2rad(deg) {
+  return deg * (Math.PI / 180);
 }
